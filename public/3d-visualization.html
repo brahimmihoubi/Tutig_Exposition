@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Virtualization Strategy — 3D Interactive Visualization</title>
+
+  <!-- ==================== CDN IMPORTS ==================== -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.152.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+  <style>
+    /* ==================== GLOBAL RESET ==================== */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      overflow: hidden;
+      background: #0A2540;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      color: #fff;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    canvas { display: block; }
+
+    /* ==================== SCENE MESSAGE OVERLAY ==================== */
+    #message-overlay {
+      position: fixed;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      pointer-events: none;
+      z-index: 20;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+    }
+    #message-overlay.visible { opacity: 1; }
+    #message-overlay h2 {
+      font-size: clamp(1.2rem, 3vw, 2.2rem);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-shadow: 0 2px 20px rgba(0,0,0,0.6);
+      line-height: 1.3;
+    }
+    #message-overlay p {
+      margin-top: 8px;
+      font-size: clamp(0.75rem, 1.5vw, 1rem);
+      color: rgba(255,255,255,0.6);
+      font-weight: 400;
+    }
+
+    /* ==================== SCENE INDICATOR (top-right) ==================== */
+    #scene-indicator {
+      position: fixed;
+      top: 20px;
+      right: 24px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+      z-index: 30;
+    }
+
+    /* ==================== BOTTOM CONTROL BAR ==================== */
+    #controls {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 16px 24px;
+      background: linear-gradient(transparent, rgba(10,37,64,0.95));
+      z-index: 30;
+    }
+
+    .ctrl-btn {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      backdrop-filter: blur(8px);
+      letter-spacing: 0.05em;
+    }
+    .ctrl-btn:hover {
+      background: rgba(0,191,255,0.2);
+      border-color: rgba(0,191,255,0.5);
+      transform: translateY(-1px);
+    }
+    .ctrl-btn:active { transform: scale(0.97); }
+    .ctrl-btn.active {
+      background: rgba(0,191,255,0.25);
+      border-color: #00BFFF;
+      color: #00BFFF;
+    }
+
+    /* Scene selector dots */
+    .scene-dots {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .scene-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .scene-dot:hover { background: rgba(0,191,255,0.4); }
+    .scene-dot.active {
+      background: #00BFFF;
+      border-color: #00BFFF;
+      box-shadow: 0 0 10px rgba(0,191,255,0.5);
+      transform: scale(1.3);
+    }
+
+    /* Explode button (scene 2 only) */
+    #explode-btn {
+      position: fixed;
+      bottom: 80px;
+      right: 24px;
+      z-index: 30;
+      display: none;
+    }
+    #explode-btn.visible { display: block; }
+
+    /* ==================== FADE TRANSITION OVERLAY ==================== */
+    #fade-overlay {
+      position: fixed;
+      inset: 0;
+      background: #0A2540;
+      z-index: 50;
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    /* ==================== PROGRESS BAR (auto-advance timer) ==================== */
+    #progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #00BFFF, #00FF7F);
+      z-index: 40;
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+
+    /* ==================== LOADING SCREEN ==================== */
+    #loading {
+      position: fixed;
+      inset: 0;
+      background: #0A2540;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      transition: opacity 0.8s ease;
+    }
+    #loading .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(0,191,255,0.2);
+      border-top-color: #00BFFF;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    #loading p {
+      margin-top: 16px;
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.5);
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <!-- Loading Screen -->
+  <div id="loading">
+    <div class="spinner"></div>
+    <p>Initializing 3D Visualization...</p>
+  </div>
+
+  <!-- Fade Transition Overlay -->
+  <div id="fade-overlay"></div>
+
+  <!-- Auto-advance Progress Bar -->
+  <div id="progress-bar"></div>
+
+  <!-- Scene Indicator -->
+  <div id="scene-indicator">Scene 1 / 5</div>
+
+  <!-- Central Message -->
+  <div id="message-overlay">
+    <h2 id="msg-title"></h2>
+    <p id="msg-subtitle"></p>
+  </div>
+
+  <!-- Explode View Button (Scene 2 only) -->
+  <button id="explode-btn" class="ctrl-btn" onclick="toggleExplode()">💥 Explode View</button>
+
+  <!-- Bottom Controls -->
+  <div id="controls">
+    <button class="ctrl-btn" onclick="prevScene()">◀ Prev</button>
+    <div class="scene-dots">
+      <div class="scene-dot active" onclick="goToScene(0)"></div>
+      <div class="scene-dot" onclick="goToScene(1)"></div>
+      <div class="scene-dot" onclick="goToScene(2)"></div>
+      <div class="scene-dot" onclick="goToScene(3)"></div>
+      <div class="scene-dot" onclick="goToScene(4)"></div>
+    </div>
+    <button class="ctrl-btn" onclick="nextScene()">Next ▶</button>
+    <button class="ctrl-btn" onclick="goToScene(0)" title="Restart">⟲</button>
+  </div>
+
+<script>
+// ════════════════════════════════════════════════════════════════
+// CONFIGURATION — edit these values to tweak the visualization
+// ════════════════════════════════════════════════════════════════
+
+const CONFIG = {
+  BG_COLOR:       0x0A2540,    // Scene background
+  SERVER_COLOR:   0x00BFFF,    // Server / infrastructure blue
+  VM_COLOR:       0x00FF7F,    // Virtual machine green
+  PROBLEM_COLOR:  0xFF4500,    // Warning / risk red
+  CLOUD_COLOR:    0x00BFFF,    // Cloud orb color
+  WIRE_COLOR:     0x00BFFF,    // Connection lines
+  PARTICLE_COLOR: 0xFFFFFF,    // Data-flow particles
+
+  AUTO_ADVANCE_MS: 8000,       // Time per scene in ms (8 seconds)
+  FADE_DURATION:   0.5,        // Scene transition fade (seconds)
+  CAMERA_DISTANCE: 18,         // Default camera Z distance
+  AUTO_ROTATE_SPEED: 0.3,      // OrbitControls auto-rotate speed
+};
+
+// ════════════════════════════════════════════════════════════════
+// SCENE DATA — messages & subtitles for each scene
+// ════════════════════════════════════════════════════════════════
+
+const SCENE_DATA = [
+  {
+    title: "Resources Are Wasted",
+    subtitle: "Each physical server runs only one small workload — massive underutilization."
+  },
+  {
+    title: "Hypervisor Enables Multiple Systems on One Machine",
+    subtitle: "A thin software layer allows hardware sharing across isolated virtual machines."
+  },
+  {
+    title: "Dynamic Resource Management & Scalability",
+    subtitle: "Live migration moves workloads between servers with zero downtime."
+  },
+  {
+    title: "Centralization Increases Risk If Not Managed",
+    subtitle: "A single point of failure can bring down all dependent services."
+  },
+  {
+    title: "Future = Distributed, Intelligent, Automated",
+    subtitle: "Edge computing + AI-driven orchestration for self-optimizing infrastructure."
+  }
+];
+
+// ════════════════════════════════════════════════════════════════
+// THREE.JS CORE SETUP
+// ════════════════════════════════════════════════════════════════
+
+let scene, camera, renderer, controls;
+let currentSceneIndex = 0;
+let sceneGroup = null;             // Container for current scene's objects
+let animationCallbacks = [];       // Per-frame callbacks for current scene
+let autoAdvanceTimer = null;
+let progressInterval = null;
+let progressStart = 0;
+let isExploded = false;
+let raycaster, mouse;              // For click interaction (scene 2)
+let clickableObjects = [];         // Objects that respond to click
+
+function initThree() {
+  // Renderer
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(CONFIG.BG_COLOR);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  document.body.prepend(renderer.domElement);
+
+  // Scene
+  scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(CONFIG.BG_COLOR, 0.012);
+
+  // Camera
+  camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 500);
+  camera.position.set(0, 4, CONFIG.CAMERA_DISTANCE);
+
+  // Controls
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = CONFIG.AUTO_ROTATE_SPEED;
+  controls.maxDistance = 40;
+  controls.minDistance = 6;
+
+  // Raycaster for interaction
+  raycaster = new THREE.Raycaster();
+  mouse = new THREE.Vector2();
+
+  // Global lights (ambient + hemisphere)
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+  scene.add(ambientLight);
+
+  const hemiLight = new THREE.HemisphereLight(0x00BFFF, 0x0A2540, 0.4);
+  scene.add(hemiLight);
+
+  // Subtle star field background
+  createStarField();
+
+  // Events
+  window.addEventListener('resize', onResize);
+  window.addEventListener('click', onMouseClick);
+  window.addEventListener('keydown', onKeyDown);
+}
+
+function createStarField() {
+  const starCount = 600;
+  const geometry = new THREE.BufferGeometry();
+  const positions = new Float32Array(starCount * 3);
+  for (let i = 0; i < starCount * 3; i++) {
+    positions[i] = (Math.random() - 0.5) * 200;
+  }
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const material = new THREE.PointsMaterial({ color: 0xffffff, size: 0.15, transparent: true, opacity: 0.4 });
+  const stars = new THREE.Points(geometry, material);
+  scene.add(stars);
+}
+
+function onResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function onKeyDown(e) {
+  if (e.key === 'ArrowRight' || e.key === ' ') nextScene();
+  if (e.key === 'ArrowLeft') prevScene();
+}
+
+// ════════════════════════════════════════════════════════════════
+// CLICK INTERACTION (Scene 2: click layers to highlight)
+// ════════════════════════════════════════════════════════════════
+
+function onMouseClick(event) {
+  if (currentSceneIndex !== 1 || clickableObjects.length === 0) return;
+
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(clickableObjects);
+
+  // Reset all
+  clickableObjects.forEach(obj => {
+    if (obj.userData.originalEmissive !== undefined) {
+      obj.material.emissiveIntensity = 0;
+    }
+  });
+
+  if (intersects.length > 0) {
+    const hit = intersects[0].object;
+    if (hit.material.emissive) {
+      hit.material.emissiveIntensity = 0.6;
+      hit.material.emissive.set(0x00BFFF);
+    }
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// MATERIAL HELPERS
+// ════════════════════════════════════════════════════════════════
+
+function makeServerMaterial(color = CONFIG.SERVER_COLOR) {
+  return new THREE.MeshPhongMaterial({
+    color,
+    transparent: true,
+    opacity: 0.25,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+  });
+}
+
+function makeVMMaterial(color = CONFIG.VM_COLOR) {
+  return new THREE.MeshPhongMaterial({
+    color,
+    emissive: color,
+    emissiveIntensity: 0.3,
+    transparent: true,
+    opacity: 0.9,
+  });
+}
+
+function makeSolidMaterial(color, opacity = 1) {
+  return new THREE.MeshPhongMaterial({
+    color,
+    emissive: color,
+    emissiveIntensity: 0.15,
+    transparent: opacity < 1,
+    opacity,
+  });
+}
+
+// Wireframe box (server cage)
+function createWireframeBox(w, h, d, color = CONFIG.SERVER_COLOR) {
+  const edges = new THREE.EdgesGeometry(new THREE.BoxGeometry(w, h, d));
+  const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.6 }));
+  return line;
+}
+
+// Glowing line between two points
+function createGlowLine(p1, p2, color = CONFIG.WIRE_COLOR) {
+  const geometry = new THREE.BufferGeometry().setFromPoints([p1, p2]);
+  const material = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.5 });
+  return new THREE.Line(geometry, material);
+}
+
+// Text sprite
+function createTextSprite(text, fontSize = 48, color = '#ffffff') {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = 512;
+  canvas.height = 128;
+  ctx.font = `bold ${fontSize}px "Segoe UI", system-ui, sans-serif`;
+  ctx.fillStyle = color;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, 256, 64);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.minFilter = THREE.LinearFilter;
+  const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true, opacity: 0.85 });
+  const sprite = new THREE.Sprite(spriteMat);
+  sprite.scale.set(4, 1, 1);
+  return sprite;
+}
+
+// CPU usage bar
+function createCPUBar(fillPercent, x, y, z) {
+  const group = new THREE.Group();
+  // Background bar
+  const bgGeom = new THREE.BoxGeometry(0.3, 2, 0.3);
+  const bgMat = new THREE.MeshPhongMaterial({ color: 0x1a3a5c, transparent: true, opacity: 0.5 });
+  const bg = new THREE.Mesh(bgGeom, bgMat);
+  group.add(bg);
+  // Fill bar
+  const fillH = 2 * fillPercent;
+  const fillGeom = new THREE.BoxGeometry(0.28, fillH, 0.28);
+  const fillColor = fillPercent < 0.4 ? CONFIG.VM_COLOR : (fillPercent < 0.7 ? 0xFFD700 : CONFIG.PROBLEM_COLOR);
+  const fillMat = new THREE.MeshPhongMaterial({ color: fillColor, emissive: fillColor, emissiveIntensity: 0.4 });
+  const fill = new THREE.Mesh(fillGeom, fillMat);
+  fill.position.y = -1 + fillH / 2;
+  group.add(fill);
+  group.position.set(x, y, z);
+  return group;
+}
+
+// ════════════════════════════════════════════════════════════════
+// SCENE BUILDERS
+// ════════════════════════════════════════════════════════════════
+
+// ────── SCENE 1: Wasted Resources ──────
+function buildScene1() {
+  const group = new THREE.Group();
+  const serverPositions = [
+    new THREE.Vector3(-7, 0, 0),
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(7, 0, 0),
+  ];
+
+  const vms = [];
+
+  serverPositions.forEach((pos, i) => {
+    // Server wireframe cage (4x4x4)
+    const cage = createWireframeBox(4, 4, 4, CONFIG.SERVER_COLOR);
+    cage.position.copy(pos);
+    group.add(cage);
+
+    // Translucent server fill
+    const fillGeom = new THREE.BoxGeometry(4, 4, 4);
+    const fillMat = makeServerMaterial();
+    const fill = new THREE.Mesh(fillGeom, fillMat);
+    fill.position.copy(pos);
+    group.add(fill);
+
+    // Single small VM inside (0.5x0.5x0.5) — deliberately tiny to show waste
+    const vmGeom = new THREE.BoxGeometry(0.8, 0.8, 0.8);
+    const vmMat = makeVMMaterial();
+    const vm = new THREE.Mesh(vmGeom, vmMat);
+    vm.position.copy(pos);
+    vm.position.y -= 0.5;
+    group.add(vm);
+    vms.push(vm);
+
+    // CPU bar — low usage (20%)
+    const cpuBar = createCPUBar(0.2, pos.x + 2.5, pos.y, pos.z);
+    group.add(cpuBar);
+
+    // Server label
+    const label = createTextSprite(`Server ${i + 1}`, 36, '#00BFFF');
+    label.position.set(pos.x, pos.y + 3, pos.z);
+    label.scale.set(3, 0.8, 1);
+    group.add(label);
+  });
+
+  // Point light for the scene
+  const light = new THREE.PointLight(0x00BFFF, 1.5, 30);
+  light.position.set(0, 8, 8);
+  group.add(light);
+
+  // Animation: slow blink on VMs (opacity 0.5 → 1)
+  animationCallbacks.push((time) => {
+    const t = Math.sin(time * 1.2) * 0.25 + 0.75; // Range: 0.5 - 1.0
+    vms.forEach(vm => {
+      vm.material.opacity = t;
+      vm.material.emissiveIntensity = t * 0.4;
+    });
+  });
+
+  return group;
+}
+
+// ────── SCENE 2: Hypervisor Efficiency ──────
+// Store references for explode animation
+let scene2Layers = [];
+
+function buildScene2() {
+  const group = new THREE.Group();
+  scene2Layers = [];
+  clickableObjects = [];
+  isExploded = false;
+
+  // ── Layer 1: Hardware base (gray platform)
+  const hwGeom = new THREE.BoxGeometry(8, 0.6, 5);
+  const hwMat = new THREE.MeshPhongMaterial({
+    color: 0x4a5568,
+    emissive: 0x4a5568,
+    emissiveIntensity: 0.1,
+  });
+  hwMat.userData = { label: 'Hardware Layer' };
+  const hw = new THREE.Mesh(hwGeom, hwMat);
+  hw.position.y = -2.5;
+  hw.userData.originalY = -2.5;
+  hw.userData.label = 'Hardware Layer';
+  hw.userData.originalEmissive = 0;
+  group.add(hw);
+  scene2Layers.push(hw);
+  clickableObjects.push(hw);
+
+  // Hardware label
+  const hwLabel = createTextSprite('Hardware', 32, '#94A3B8');
+  hwLabel.position.set(0, -3.5, 0);
+  hwLabel.scale.set(2.5, 0.6, 1);
+  hw.add(hwLabel);
+
+  // ── Layer 2: Hypervisor (semi-transparent blue plane)
+  const hvGeom = new THREE.BoxGeometry(7.5, 0.15, 4.5);
+  const hvMat = new THREE.MeshPhongMaterial({
+    color: CONFIG.SERVER_COLOR,
+    emissive: CONFIG.SERVER_COLOR,
+    emissiveIntensity: 0.3,
+    transparent: true,
+    opacity: 0.6,
+    side: THREE.DoubleSide,
+  });
+  const hv = new THREE.Mesh(hvGeom, hvMat);
+  hv.position.y = -1.5;
+  hv.userData.originalY = -1.5;
+  hv.userData.label = 'Hypervisor Layer';
+  hv.userData.originalEmissive = 0;
+  group.add(hv);
+  scene2Layers.push(hv);
+  clickableObjects.push(hv);
+
+  const hvLabel = createTextSprite('Hypervisor', 32, '#00BFFF');
+  hvLabel.position.set(0, -0.8, 0);
+  hvLabel.scale.set(2.5, 0.6, 1);
+  hv.add(hvLabel);
+
+  // ── Layer 3: Multiple VMs (4 green cubes above hypervisor)
+  const vmPositions = [
+    { x: -2.5, z: -1 },
+    { x: -0.8, z: -1 },
+    { x: 0.8, z: -1 },
+    { x: 2.5, z: -1 },
+  ];
+
+  vmPositions.forEach((vp, i) => {
+    const vmGeom = new THREE.BoxGeometry(1.4, 1.4, 1.4);
+    const vmMat = makeVMMaterial();
+    vmMat.userData = { label: `VM ${i + 1}` };
+    const vm = new THREE.Mesh(vmGeom, vmMat);
+    vm.position.set(vp.x, 0, vp.z);
+    vm.userData.originalY = 0;
+    vm.userData.label = `VM ${i + 1}`;
+    vm.userData.originalEmissive = 0;
+    group.add(vm);
+    scene2Layers.push(vm);
+    clickableObjects.push(vm);
+
+    const vmLabel = createTextSprite(`VM ${i + 1}`, 28, '#00FF7F');
+    vmLabel.position.set(0, 1.2, 0);
+    vmLabel.scale.set(1.5, 0.4, 1);
+    vm.add(vmLabel);
+  });
+
+  // Server wireframe (outer cage: 6x6x6)
+  const cage = createWireframeBox(9, 6, 6, CONFIG.SERVER_COLOR);
+  cage.position.y = -0.5;
+  group.add(cage);
+
+  // Lights
+  const light = new THREE.PointLight(0x00BFFF, 1.5, 30);
+  light.position.set(0, 8, 8);
+  group.add(light);
+
+  const light2 = new THREE.PointLight(0x00FF7F, 0.8, 20);
+  light2.position.set(0, 2, -5);
+  group.add(light2);
+
+  // Animation: gentle float on VMs
+  animationCallbacks.push((time) => {
+    scene2Layers.forEach((layer, i) => {
+      if (i >= 2 && !isExploded) { // VMs only
+        layer.position.y = layer.userData.originalY + Math.sin(time * 1.5 + i * 0.8) * 0.15;
+      }
+    });
+  });
+
+  return group;
+}
+
+function toggleExplode() {
+  isExploded = !isExploded;
+  const btn = document.getElementById('explode-btn');
+  btn.textContent = isExploded ? '🔗 Collapse View' : '💥 Explode View';
+
+  // Explode offsets: spread layers vertically
+  const offsets = isExploded ? [-4, -1.5, 2, 2, 2, 2] : null;
+
+  scene2Layers.forEach((layer, i) => {
+    const targetY = isExploded ? (i < 2 ? layer.userData.originalY - 2.5 * (2 - i) : layer.userData.originalY + 3) : layer.userData.originalY;
+    gsap.to(layer.position, {
+      y: targetY,
+      duration: 1,
+      ease: 'power3.inOut',
+    });
+  });
+}
+
+// ────── SCENE 3: Dynamic Management ──────
+function buildScene3() {
+  const group = new THREE.Group();
+
+  // 4 servers in a row
+  const serverData = [
+    { pos: new THREE.Vector3(-8, 0, 0), vms: 3 },  // overloaded
+    { pos: new THREE.Vector3(-2.5, 0, 0), vms: 2 },
+    { pos: new THREE.Vector3(2.5, 0, 0), vms: 1 },  // free
+    { pos: new THREE.Vector3(8, 0, 0), vms: 0 },     // empty
+  ];
+
+  const servers = [];
+  const allVMs = [];
+
+  serverData.forEach((sd, si) => {
+    // Server box
+    const cage = createWireframeBox(4, 4, 4, CONFIG.SERVER_COLOR);
+    cage.position.copy(sd.pos);
+    group.add(cage);
+
+    const fillGeom = new THREE.BoxGeometry(4, 4, 4);
+    const fillMat = makeServerMaterial(si === 0 ? CONFIG.PROBLEM_COLOR : CONFIG.SERVER_COLOR);
+    const fill = new THREE.Mesh(fillGeom, fillMat);
+    fill.position.copy(sd.pos);
+    group.add(fill);
+    servers.push(fill);
+
+    // VMs inside
+    for (let v = 0; v < sd.vms; v++) {
+      const vmGeom = new THREE.BoxGeometry(0.8, 0.8, 0.8);
+      const vmMat = makeVMMaterial();
+      const vm = new THREE.Mesh(vmGeom, vmMat);
+      vm.position.set(
+        sd.pos.x + (v - 1) * 1,
+        sd.pos.y - 0.5 + v * 0.3,
+        sd.pos.z
+      );
+      group.add(vm);
+      allVMs.push({ mesh: vm, serverIndex: si });
+    }
+
+    // Server label
+    const label = createTextSprite(`Server ${si + 1}`, 30, si === 0 ? '#FF4500' : '#00BFFF');
+    label.position.set(sd.pos.x, sd.pos.y + 3, sd.pos.z);
+    label.scale.set(2.5, 0.6, 1);
+    group.add(label);
+
+    // Connection lines to next server
+    if (si < serverData.length - 1) {
+      const nextPos = serverData[si + 1].pos;
+      const line = createGlowLine(
+        new THREE.Vector3(sd.pos.x + 2, sd.pos.y, sd.pos.z),
+        new THREE.Vector3(nextPos.x - 2, nextPos.y, nextPos.z),
+        CONFIG.WIRE_COLOR
+      );
+      group.add(line);
+    }
+  });
+
+  // Migrating VM: flies from server 0 to server 3
+  const migratingVMGeom = new THREE.BoxGeometry(0.8, 0.8, 0.8);
+  const migratingVMMat = new THREE.MeshPhongMaterial({
+    color: CONFIG.VM_COLOR,
+    emissive: CONFIG.VM_COLOR,
+    emissiveIntensity: 0.8,
+    transparent: true,
+    opacity: 0.95,
+  });
+  const migratingVM = new THREE.Mesh(migratingVMGeom, migratingVMMat);
+  migratingVM.position.set(-8, 1.5, 0);
+  group.add(migratingVM);
+
+  // Trail particles for migrating VM
+  const trailGeom = new THREE.BufferGeometry();
+  const trailCount = 30;
+  const trailPositions = new Float32Array(trailCount * 3);
+  trailGeom.setAttribute('position', new THREE.BufferAttribute(trailPositions, 3));
+  const trailMat = new THREE.PointsMaterial({ color: CONFIG.VM_COLOR, size: 0.1, transparent: true, opacity: 0.5 });
+  const trail = new THREE.Points(trailGeom, trailMat);
+  group.add(trail);
+
+  // Lights
+  const light = new THREE.PointLight(0x00BFFF, 1.5, 40);
+  light.position.set(0, 10, 8);
+  group.add(light);
+
+  // Animation: VM migration loop
+  let migrationPhase = 0;
+  animationCallbacks.push((time) => {
+    // Cycle migration: left→right over ~4 seconds, then reset
+    migrationPhase = (time * 0.3) % 1; // 0→1 loop
+    const startX = -8;
+    const endX = 8;
+    const x = startX + (endX - startX) * migrationPhase;
+    const y = 1.5 + Math.sin(migrationPhase * Math.PI) * 2; // arc
+    migratingVM.position.set(x, y, 0);
+    migratingVM.rotation.y = time * 3;
+
+    // Pulse glow
+    migratingVMMat.emissiveIntensity = 0.5 + Math.sin(time * 6) * 0.3;
+
+    // Update trail
+    const positions = trail.geometry.attributes.position.array;
+    for (let i = trailCount - 1; i > 0; i--) {
+      positions[i * 3] = positions[(i - 1) * 3];
+      positions[i * 3 + 1] = positions[(i - 1) * 3 + 1];
+      positions[i * 3 + 2] = positions[(i - 1) * 3 + 2];
+    }
+    positions[0] = migratingVM.position.x;
+    positions[1] = migratingVM.position.y;
+    positions[2] = migratingVM.position.z;
+    trail.geometry.attributes.position.needsUpdate = true;
+
+    // Server color transitions based on migration phase
+    if (migrationPhase < 0.3) {
+      servers[0].material.color.setHex(CONFIG.PROBLEM_COLOR);
+      servers[0].material.opacity = 0.25 + Math.sin(time * 4) * 0.1;
+    } else {
+      servers[0].material.color.lerp(new THREE.Color(CONFIG.SERVER_COLOR), 0.02);
+    }
+    if (migrationPhase > 0.7) {
+      servers[3].material.color.setHex(CONFIG.VM_COLOR);
+      servers[3].material.opacity = 0.3;
+    }
+  });
+
+  return group;
+}
+
+// ────── SCENE 4: Centralization Risk ──────
+function buildScene4() {
+  const group = new THREE.Group();
+
+  // Central server
+  const serverGeom = new THREE.BoxGeometry(4, 4, 4);
+  const serverMat = new THREE.MeshPhongMaterial({
+    color: CONFIG.SERVER_COLOR,
+    emissive: CONFIG.SERVER_COLOR,
+    emissiveIntensity: 0.2,
+    transparent: true,
+    opacity: 0.4,
+  });
+  const server = new THREE.Mesh(serverGeom, serverMat);
+  group.add(server);
+
+  const cage = createWireframeBox(4, 4, 4, CONFIG.SERVER_COLOR);
+  group.add(cage);
+
+  // Orbiting VMs (8 VMs in orbit)
+  const vmCount = 8;
+  const vms = [];
+  for (let i = 0; i < vmCount; i++) {
+    const angle = (i / vmCount) * Math.PI * 2;
+    const radius = 5;
+    const vmGeom = new THREE.BoxGeometry(0.7, 0.7, 0.7);
+    const vmMat = makeVMMaterial();
+    const vm = new THREE.Mesh(vmGeom, vmMat);
+    vm.position.set(Math.cos(angle) * radius, Math.sin(angle) * 1.5, Math.sin(angle) * radius);
+    vm.userData.angle = angle;
+    vm.userData.radius = radius;
+    vm.userData.alive = true;
+    group.add(vm);
+    vms.push(vm);
+
+    // Connection line from VM to server
+    const line = createGlowLine(vm.position, new THREE.Vector3(0, 0, 0), CONFIG.WIRE_COLOR);
+    line.userData.vm = vm;
+    group.add(line);
+  }
+
+  // Warning icon (red sphere that appears during failure)
+  const warningGeom = new THREE.OctahedronGeometry(0.6, 0);
+  const warningMat = new THREE.MeshPhongMaterial({
+    color: CONFIG.PROBLEM_COLOR,
+    emissive: CONFIG.PROBLEM_COLOR,
+    emissiveIntensity: 0.8,
+    transparent: true,
+    opacity: 0,
+  });
+  const warning = new THREE.Mesh(warningGeom, warningMat);
+  warning.position.set(0, 3, 0);
+  group.add(warning);
+
+  // Lights
+  const light = new THREE.PointLight(0x00BFFF, 1.5, 30);
+  light.position.set(0, 10, 8);
+  group.add(light);
+
+  const redLight = new THREE.PointLight(CONFIG.PROBLEM_COLOR, 0, 20);
+  redLight.position.set(0, 0, 0);
+  group.add(redLight);
+
+  // Animation: 3-phase cycle
+  // Phase 1 (0-0.4): normal orbiting
+  // Phase 2 (0.4-0.6): server turns red, pulses
+  // Phase 3 (0.6-1.0): VMs freeze and fade, server stops
+  let cycleDuration = 6; // seconds per full cycle
+  animationCallbacks.push((time) => {
+    const phase = (time % cycleDuration) / cycleDuration;
+
+    if (phase < 0.4) {
+      // Phase 1: Normal operation — VMs orbit
+      vms.forEach((vm, i) => {
+        const a = vm.userData.angle + time * 0.5;
+        vm.position.x = Math.cos(a) * vm.userData.radius;
+        vm.position.z = Math.sin(a) * vm.userData.radius;
+        vm.position.y = Math.sin(a * 0.5 + i) * 1.5;
+        vm.material.opacity = 0.9;
+        vm.rotation.y = time;
+      });
+      serverMat.color.setHex(CONFIG.SERVER_COLOR);
+      serverMat.emissive.setHex(CONFIG.SERVER_COLOR);
+      serverMat.emissiveIntensity = 0.2;
+      warningMat.opacity = 0;
+      redLight.intensity = 0;
+
+    } else if (phase < 0.6) {
+      // Phase 2: Server turns red + pulses
+      const severity = (phase - 0.4) / 0.2; // 0→1
+      const pulse = Math.sin(time * 12) * 0.5 + 0.5;
+      serverMat.color.lerpColors(new THREE.Color(CONFIG.SERVER_COLOR), new THREE.Color(CONFIG.PROBLEM_COLOR), severity);
+      serverMat.emissive.set(CONFIG.PROBLEM_COLOR);
+      serverMat.emissiveIntensity = severity * pulse * 0.8;
+      serverMat.opacity = 0.4 + pulse * 0.2;
+
+      warningMat.opacity = severity;
+      warning.rotation.y = time * 4;
+      warning.scale.setScalar(1 + pulse * 0.3);
+
+      redLight.intensity = severity * 2;
+
+      // VMs slow down
+      vms.forEach((vm, i) => {
+        const speed = 0.5 * (1 - severity * 0.8);
+        const a = vm.userData.angle + time * speed;
+        vm.position.x = Math.cos(a) * vm.userData.radius;
+        vm.position.z = Math.sin(a) * vm.userData.radius;
+        vm.rotation.y = time * (1 - severity);
+      });
+
+    } else {
+      // Phase 3: VMs freeze and fade out
+      const fadeProgress = (phase - 0.6) / 0.4; // 0→1
+      vms.forEach((vm) => {
+        vm.material.opacity = Math.max(0, 0.9 - fadeProgress * 1.2);
+        vm.material.emissiveIntensity = Math.max(0, 0.3 - fadeProgress * 0.5);
+      });
+      serverMat.color.setHex(CONFIG.PROBLEM_COLOR);
+      serverMat.emissive.setHex(CONFIG.PROBLEM_COLOR);
+      serverMat.emissiveIntensity = 0.3 + Math.sin(time * 3) * 0.2;
+
+      warningMat.opacity = 0.7 + Math.sin(time * 8) * 0.3;
+      warning.rotation.y = time * 2;
+      redLight.intensity = 1.5 + Math.sin(time * 6) * 0.5;
+    }
+
+    // Update connection lines
+    group.children.forEach(child => {
+      if (child.isLine && child.userData.vm) {
+        const positions = child.geometry.attributes.position.array;
+        positions[0] = child.userData.vm.position.x;
+        positions[1] = child.userData.vm.position.y;
+        positions[2] = child.userData.vm.position.z;
+        child.geometry.attributes.position.needsUpdate = true;
+        child.material.opacity = child.userData.vm.material.opacity * 0.5;
+      }
+    });
+  });
+
+  return group;
+}
+
+// ────── SCENE 5: Future Distributed Cloud ──────
+function buildScene5() {
+  const group = new THREE.Group();
+
+  // Central cloud orb
+  const cloudGeom = new THREE.SphereGeometry(2, 32, 32);
+  const cloudMat = new THREE.MeshPhongMaterial({
+    color: CONFIG.CLOUD_COLOR,
+    emissive: CONFIG.CLOUD_COLOR,
+    emissiveIntensity: 0.4,
+    transparent: true,
+    opacity: 0.35,
+    wireframe: false,
+  });
+  const cloud = new THREE.Mesh(cloudGeom, cloudMat);
+  group.add(cloud);
+
+  // Cloud inner glow sphere
+  const innerGeom = new THREE.SphereGeometry(1.6, 32, 32);
+  const innerMat = new THREE.MeshPhongMaterial({
+    color: 0xffffff,
+    emissive: CONFIG.CLOUD_COLOR,
+    emissiveIntensity: 0.6,
+    transparent: true,
+    opacity: 0.15,
+  });
+  const inner = new THREE.Mesh(innerGeom, innerMat);
+  group.add(inner);
+
+  // Cloud wireframe
+  const cloudWire = new THREE.Mesh(
+    new THREE.SphereGeometry(2.1, 16, 16),
+    new THREE.MeshBasicMaterial({ color: CONFIG.CLOUD_COLOR, wireframe: true, transparent: true, opacity: 0.2 })
+  );
+  group.add(cloudWire);
+
+  const cloudLabel = createTextSprite('Cloud Core', 32, '#00BFFF');
+  cloudLabel.position.set(0, 3.2, 0);
+  cloudLabel.scale.set(2.5, 0.6, 1);
+  group.add(cloudLabel);
+
+  // 6 Edge nodes in circle
+  const edgeCount = 6;
+  const edgeRadius = 8;
+  const edgeNodes = [];
+  const edgeVMs = []; // VMs at each edge node
+
+  for (let i = 0; i < edgeCount; i++) {
+    const angle = (i / edgeCount) * Math.PI * 2;
+    const x = Math.cos(angle) * edgeRadius;
+    const z = Math.sin(angle) * edgeRadius;
+
+    // Edge node box
+    const nodeGeom = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+    const nodeMat = new THREE.MeshPhongMaterial({
+      color: CONFIG.SERVER_COLOR,
+      emissive: CONFIG.SERVER_COLOR,
+      emissiveIntensity: 0.2,
+      transparent: true,
+      opacity: 0.7,
+    });
+    const node = new THREE.Mesh(nodeGeom, nodeMat);
+    node.position.set(x, 0, z);
+    node.userData.angle = angle;
+    node.userData.baseScale = 1;
+    group.add(node);
+    edgeNodes.push(node);
+
+    // Edge node label
+    const nodeLabel = createTextSprite(`Edge ${i + 1}`, 24, '#94A3B8');
+    nodeLabel.position.set(0, 1.5, 0);
+    nodeLabel.scale.set(1.5, 0.4, 1);
+    node.add(nodeLabel);
+
+    // VM at each edge node
+    const vmGeom = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+    const vmMat = makeVMMaterial();
+    const vm = new THREE.Mesh(vmGeom, vmMat);
+    vm.position.set(x, 1.5, z);
+    vm.userData.edgeIndex = i;
+    group.add(vm);
+    edgeVMs.push(vm);
+  }
+
+  // Create particle streams (data flow) from each edge to cloud
+  const particleSystems = [];
+  edgeNodes.forEach((node, i) => {
+    const particleCount = 20;
+    const geom = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+    for (let p = 0; p < particleCount; p++) {
+      const t = p / particleCount;
+      positions[p * 3] = node.position.x * (1 - t);
+      positions[p * 3 + 1] = node.position.y * (1 - t) + Math.sin(t * Math.PI) * 1.5;
+      positions[p * 3 + 2] = node.position.z * (1 - t);
+    }
+    geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const mat = new THREE.PointsMaterial({
+      color: CONFIG.PARTICLE_COLOR,
+      size: 0.12,
+      transparent: true,
+      opacity: 0.7,
+    });
+    const particles = new THREE.Points(geom, mat);
+    particles.userData.edgeIndex = i;
+    group.add(particles);
+    particleSystems.push(particles);
+  });
+
+  // Lights
+  const light = new THREE.PointLight(0x00BFFF, 2, 30);
+  light.position.set(0, 8, 0);
+  group.add(light);
+
+  const light2 = new THREE.PointLight(0x00FF7F, 0.5, 20);
+  light2.position.set(0, -5, 0);
+  group.add(light2);
+
+  // Animation
+  animationCallbacks.push((time) => {
+    // Cloud pulses
+    const cloudPulse = 1 + Math.sin(time * 1.5) * 0.05;
+    cloud.scale.setScalar(cloudPulse);
+    cloudWire.rotation.y = time * 0.2;
+    cloudWire.rotation.x = time * 0.1;
+    inner.material.emissiveIntensity = 0.4 + Math.sin(time * 2) * 0.2;
+
+    // Edge nodes activate dynamically (one highlighted at a time)
+    const activeIndex = Math.floor(time * 0.5) % edgeCount;
+    edgeNodes.forEach((node, i) => {
+      const isActive = i === activeIndex;
+      const targetScale = isActive ? 1.3 : 1;
+      node.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.05);
+      node.material.emissiveIntensity = isActive ? 0.6 + Math.sin(time * 4) * 0.3 : 0.2;
+      node.material.color.setHex(isActive ? CONFIG.VM_COLOR : CONFIG.SERVER_COLOR);
+      node.rotation.y = time * (isActive ? 2 : 0.5);
+    });
+
+    // VMs float above edge nodes
+    edgeVMs.forEach((vm, i) => {
+      const node = edgeNodes[i];
+      vm.position.x = node.position.x;
+      vm.position.z = node.position.z;
+      vm.position.y = 1.5 + Math.sin(time * 2 + i) * 0.3;
+      vm.rotation.y = time * 1.5;
+      vm.rotation.x = time * 0.5;
+    });
+
+    // Animate particle streams (flow toward cloud)
+    particleSystems.forEach((ps, pi) => {
+      const positions = ps.geometry.attributes.position.array;
+      const node = edgeNodes[pi];
+      const particleCount = positions.length / 3;
+      for (let p = 0; p < particleCount; p++) {
+        let t = ((p / particleCount) + time * 0.3) % 1; // Flowing motion
+        positions[p * 3] = node.position.x * (1 - t);
+        positions[p * 3 + 1] = Math.sin(t * Math.PI) * 2;
+        positions[p * 3 + 2] = node.position.z * (1 - t);
+      }
+      ps.geometry.attributes.position.needsUpdate = true;
+      ps.material.opacity = pi === Math.floor(time * 0.5) % edgeCount ? 0.9 : 0.4;
+    });
+  });
+
+  return group;
+}
+
+// ════════════════════════════════════════════════════════════════
+// SCENE MANAGEMENT
+// ════════════════════════════════════════════════════════════════
+
+const sceneBuilders = [buildScene1, buildScene2, buildScene3, buildScene4, buildScene5];
+
+function clearCurrentScene() {
+  if (sceneGroup) {
+    scene.remove(sceneGroup);
+    // Dispose geometries and materials
+    sceneGroup.traverse((child) => {
+      if (child.geometry) child.geometry.dispose();
+      if (child.material) {
+        if (Array.isArray(child.material)) {
+          child.material.forEach(m => m.dispose());
+        } else {
+          child.material.dispose();
+        }
+      }
+    });
+    sceneGroup = null;
+  }
+  animationCallbacks = [];
+  clickableObjects = [];
+}
+
+function loadScene(index) {
+  clearCurrentScene();
+  currentSceneIndex = index;
+
+  // Build new scene
+  sceneGroup = sceneBuilders[index]();
+  scene.add(sceneGroup);
+
+  // Update UI
+  updateUI();
+
+  // Reset camera
+  gsap.to(camera.position, {
+    x: 0,
+    y: 4,
+    z: CONFIG.CAMERA_DISTANCE,
+    duration: 1.2,
+    ease: 'power2.inOut',
+  });
+  controls.target.set(0, 0, 0);
+
+  // Show/hide explode button
+  document.getElementById('explode-btn').classList.toggle('visible', index === 1);
+
+  // Start auto-advance timer
+  startAutoAdvance();
+}
+
+function transitionToScene(index) {
+  if (index < 0 || index >= sceneBuilders.length) return;
+
+  const overlay = document.getElementById('fade-overlay');
+
+  // Fade out
+  gsap.to(overlay, {
+    opacity: 1,
+    duration: CONFIG.FADE_DURATION,
+    ease: 'power2.in',
+    onComplete: () => {
+      loadScene(index);
+      // Fade in
+      gsap.to(overlay, {
+        opacity: 0,
+        duration: CONFIG.FADE_DURATION,
+        ease: 'power2.out',
+      });
+    }
+  });
+}
+
+function nextScene() {
+  const next = (currentSceneIndex + 1) % sceneBuilders.length;
+  transitionToScene(next);
+}
+
+function prevScene() {
+  const prev = (currentSceneIndex - 1 + sceneBuilders.length) % sceneBuilders.length;
+  transitionToScene(prev);
+}
+
+function goToScene(index) {
+  if (index === currentSceneIndex) return;
+  transitionToScene(index);
+}
+
+// ════════════════════════════════════════════════════════════════
+// UI UPDATES
+// ════════════════════════════════════════════════════════════════
+
+function updateUI() {
+  // Scene indicator
+  document.getElementById('scene-indicator').textContent = `Scene ${currentSceneIndex + 1} / ${sceneBuilders.length}`;
+
+  // Scene dots
+  document.querySelectorAll('.scene-dot').forEach((dot, i) => {
+    dot.classList.toggle('active', i === currentSceneIndex);
+  });
+
+  // Message overlay
+  const data = SCENE_DATA[currentSceneIndex];
+  const msgOverlay = document.getElementById('message-overlay');
+  document.getElementById('msg-title').textContent = data.title;
+  document.getElementById('msg-subtitle').textContent = data.subtitle;
+  msgOverlay.classList.remove('visible');
+  // Fade in message after a short delay
+  setTimeout(() => msgOverlay.classList.add('visible'), 600);
+}
+
+// ════════════════════════════════════════════════════════════════
+// AUTO-ADVANCE TIMER
+// ════════════════════════════════════════════════════════════════
+
+function startAutoAdvance() {
+  clearTimeout(autoAdvanceTimer);
+  clearInterval(progressInterval);
+
+  const bar = document.getElementById('progress-bar');
+  bar.style.width = '0%';
+  progressStart = Date.now();
+
+  // Update progress bar
+  progressInterval = setInterval(() => {
+    const elapsed = Date.now() - progressStart;
+    const percent = Math.min(100, (elapsed / CONFIG.AUTO_ADVANCE_MS) * 100);
+    bar.style.width = percent + '%';
+  }, 50);
+
+  // Auto-advance
+  autoAdvanceTimer = setTimeout(() => {
+    clearInterval(progressInterval);
+    nextScene();
+  }, CONFIG.AUTO_ADVANCE_MS);
+}
+
+// ════════════════════════════════════════════════════════════════
+// RENDER LOOP
+// ════════════════════════════════════════════════════════════════
+
+const clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const elapsed = clock.getElapsedTime();
+
+  // Run scene-specific animations
+  animationCallbacks.forEach(cb => cb(elapsed));
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+// ════════════════════════════════════════════════════════════════
+// INITIALIZATION
+// ════════════════════════════════════════════════════════════════
+
+function init() {
+  initThree();
+  loadScene(0);
+  animate();
+
+  // Hide loading screen
+  const loadingEl = document.getElementById('loading');
+  setTimeout(() => {
+    loadingEl.style.opacity = '0';
+    setTimeout(() => { loadingEl.style.display = 'none'; }, 800);
+  }, 500);
+}
+
+// Wait for DOM
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
