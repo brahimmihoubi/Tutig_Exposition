@@ -284,7 +284,7 @@ export default function WastedResourcesScene({ className }: Props) {
     scene.add(trim);
 
     // Floor reflection area
-    const floorGeom = new THREE.PlaneGeometry(22, 14);
+    const floorGeom = new THREE.PlaneGeometry(300, 300);
     const floorMat = new THREE.MeshStandardMaterial({ color: 0x0f1520, metalness: 0.85, roughness: 0.45 });
     const floor = new THREE.Mesh(floorGeom, floorMat);
     floor.rotation.x = -Math.PI / 2;

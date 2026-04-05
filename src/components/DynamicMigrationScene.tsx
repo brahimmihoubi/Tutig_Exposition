@@ -168,7 +168,7 @@ export default function DynamicMigrationScene({ className }: Props) {
 
     // ── Floor ──
     const floor = new THREE.Mesh(
-      new THREE.PlaneGeometry(30, 18),
+      new THREE.PlaneGeometry(300, 300),
       new THREE.MeshStandardMaterial({ color: 0x0d1117, metalness: 0.8, roughness: 0.5 })
     );
     floor.rotation.x = -Math.PI / 2;
@@ -324,7 +324,7 @@ export default function DynamicMigrationScene({ className }: Props) {
     let prevMouse = { x: 0, y: 0 };
     let cameraAngle = 0;
     let cameraPitch = 0.28;
-    let cameraZoom = 18;
+    let cameraZoom = 21;
     let autoRotate = true;
     let lastInteraction = 0;
     let msgOpacity = 0;
@@ -364,7 +364,7 @@ export default function DynamicMigrationScene({ className }: Props) {
       camera.position.x = Math.sin(cameraAngle) * cameraZoom * 0.4;
       camera.position.z = Math.cos(cameraAngle) * cameraZoom;
       camera.position.y = 3 + cameraPitch * 8;
-      camera.lookAt(0, 1, 0);
+      camera.lookAt(0, 1.5, 0);
 
       // ── Migration animation (cube flies S2→S3 on curved path, loops every ~4s) ──
       const migDuration = 4.0;

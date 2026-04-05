@@ -50,7 +50,7 @@ export default function HypervisorStackScene({ className }: Props) {
     scene.add(rimLight);
 
     // ── Floor ──
-    const floorGeom = new THREE.PlaneGeometry(30, 20);
+    const floorGeom = new THREE.PlaneGeometry(300, 300);
     const floorMat = new THREE.MeshStandardMaterial({ color: 0x0d1117, metalness: 0.8, roughness: 0.5 });
     const floor = new THREE.Mesh(floorGeom, floorMat);
     floor.rotation.x = -Math.PI / 2;
