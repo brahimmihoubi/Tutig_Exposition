@@ -307,211 +307,149 @@ export default function App() {
       {/* 3. Technologies Section */}
       <section id="technologies" className="pt-32 pb-24 bg-white scroll-mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="section-fade-in text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold text-primary mb-4">3. Virtualization Technologies</h2>
-            <p className="text-gray-text mb-4 text-lg">Server, Storage, and Network Solutions</p>
-            <div className="w-20 h-1.5 bg-secondary mx-auto rounded-full" />
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-black text-primary mb-4 uppercase tracking-tighter">3. Virtualization Technologies</h2>
+            <div className="w-24 h-1.5 bg-secondary mx-auto rounded-full" />
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
-            {[
-              { 
-                icon: <Cpu />, 
-                title: "Server Virtualization", 
-                desc: "The most common form, where a hypervisor partitions physical CPU, RAM, and I/O into multiple isolated Virtual Machines (VMs).", 
-                tech: ["VMware vSphere/ESXi", "Microsoft Hyper-V", "KVM (Kernel-based VM)"],
-                impact: "Maximizes hardware ROI by increasing server utilization from 15% to 80%+" 
-              },
-              { 
-                icon: <Database />, 
-                title: "Storage Virtualization", 
-                desc: "Abstracts physical storage from multiple network-attached devices into a single, software-managed pool of capacity.", 
-                tech: ["SAN (Storage Area Network)", "vSAN (Software-Defined Storage)", "NFS/iSCSI Protocols"],
-                impact: "Enables advanced data management like thin provisioning, snapshots, and deduplication."
-              },
-              { 
-                icon: <Network />, 
-                title: "Network Virtualization (SDN)", 
-                desc: "Decouples network control and forwarding functions, allowing the network to be programmed and managed as a software service.", 
-                tech: ["VXLAN (Virtual Extensible LAN)", "SD-WAN", "Micro-segmentation"],
-                impact: "Increases security through isolation and simplifies complex cross-datacenter routing."
-              },
-              { 
-                icon: <Cloud />, 
-                title: "Cloud Infrastructure", 
-                desc: "A service model that provides on-demand, virtualized computing resources (IaaS, PaaS, SaaS) over the internet with broad network access.", 
-                tech: ["AWS (EC2/S3)", "Microsoft Azure", "Google Cloud Platform (GCP)"],
-                impact: "Shifts CapEx to OpEx and provides infinite elasticity for modern applications."
-              },
-              { 
-                icon: <Box />, 
-                title: "Containerization", 
-                desc: "An operating-system-level virtualization method for deploying and running distributed applications without launching an entire VM.", 
-                tech: ["Docker Engine", "Kubernetes (K8s) Orchestration", "Podman"],
-                impact: "Extremely lightweight and portable; perfect for microservices and DevOps CI/CD pipelines."
-              },
-              { 
-                icon: <Layers />, 
-                title: "Desktop Virtualization (VDI)", 
-                desc: "Hosts desktop operating systems on a centralized server, delivering them as a service to remote end-user devices.", 
-                tech: ["Citrix Virtual Apps", "VMware Horizon", "Amazon WorkSpaces"],
-                impact: "Enhances security by keeping data in the data center and simplifies device management."
-              }
-            ].map((item, i) => (
-              <div key={i} className="section-fade-in p-8 rounded-2xl bg-neutral-bg border border-slate-100 hover:shadow-lg transition-all hover:border-secondary/30 group">
-                <div className="text-secondary mb-4 group-hover:scale-110 transition-transform">{item.icon}</div>
-                <h3 className="text-xl font-bold text-primary mb-2">{item.title}</h3>
-                <p className="text-gray-text text-sm mb-6 leading-relaxed">{item.desc}</p>
-                <div className="space-y-4">
-                  <div className="bg-white p-3 rounded-lg border border-slate-200">
-                    <p className="text-[10px] font-bold text-secondary uppercase tracking-widest mb-2">Key Technologies</p>
-                    <div className="flex flex-wrap gap-2 text-[11px] text-primary/70 font-medium">
-                      {item.tech.map((t, ti) => (
-                        <span key={ti} className="px-2 py-0.5 bg-secondary/5 border border-secondary/10 rounded-md">{t}</span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="text-[11px] font-medium text-primary/60 italic leading-snug">
-                    <span className="font-bold text-primary/80 not-italic">IMPACT:</span> {item.impact}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-            
-          <div className="section-fade-in space-y-12 mb-20 max-w-6xl mx-auto">
-            <h3 className="text-3xl font-bold text-primary text-center">Technical Deep Dive</h3>
-            
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div className="space-y-6">
-                <h4 className="text-2xl font-bold text-primary">VMs vs. Containerization</h4>
-                <p className="text-gray-text leading-relaxed">
-                  While both provide isolation, they operate at different layers. Virtual Machines virtualize the <strong>hardware</strong> (Kernel included), while Containers virtualize the <strong>Operating System</strong> (sharing the host Kernel).
+          {/* Primary Virtualization Types */}
+          <div className="grid md:grid-cols-3 gap-8 mb-32">
+            <div className="bg-neutral-bg p-10 rounded-[2.5rem] border border-slate-100 hover:shadow-2xl transition-all hover:-translate-y-2 group relative overflow-hidden">
+              <div className="absolute -right-4 -top-4 text-secondary opacity-[0.03] group-hover:opacity-10 transition-opacity"><Cpu size={160} /></div>
+              <h3 className="text-xl font-black text-primary mb-6 flex items-center gap-3">
+                <div className="w-10 h-10 bg-secondary/10 rounded-xl flex items-center justify-center text-secondary font-bold">01</div>
+                Server Virtualization (:
+              </h3>
+              <p className="text-gray-text leading-relaxed font-medium">
+                This means partitioning one physical server into multiple Virtual Machines (VMs) .
+              </p>
+              <div className="mt-8 p-5 bg-white rounded-2xl border border-slate-100 shadow-sm transition-all group-hover:border-secondary/30">
+                <p className="text-sm text-primary/80 italic font-bold leading-relaxed">
+                  "For example, instead of running 15 physical servers, we can run them all on just 2 physical machines, saving huge amounts of space and power."
                 </p>
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                  <table className="w-full text-xs">
-                    <thead className="bg-slate-50 border-b border-slate-100">
-                      <tr>
-                        <th className="px-4 py-3 text-left">Feature</th>
-                        <th className="px-4 py-3 text-left">Virtual Machines</th>
-                        <th className="px-4 py-3 text-left">Containers</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                      <tr>
-                        <td className="px-4 py-3 font-bold">Size</td>
-                        <td className="px-4 py-3">Gigabytes (GB)</td>
-                        <td className="px-4 py-3">Megabytes (MB)</td>
-                      </tr>
-                      <tr>
-                        <td className="px-4 py-3 font-bold">Boot Time</td>
-                        <td className="px-4 py-3">Minutes/Seconds</td>
-                        <td className="px-4 py-3">Milliseconds</td>
-                      </tr>
-                      <tr>
-                        <td className="px-4 py-3 font-bold">Isolation</td>
-                        <td className="px-4 py-3">Strong (HW Level)</td>
-                        <td className="px-4 py-3">Medium (Process Level)</td>
-                      </tr>
-                      <tr>
-                        <td className="px-4 py-3 font-bold">Efficiency</td>
-                        <td className="px-4 py-3">Higher Overhead</td>
-                        <td className="px-4 py-3">Native Performance</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-              
-              <div className="space-y-8">
-                <div className="bg-neutral-bg p-8 rounded-3xl border border-slate-100">
-                  <h4 className="text-2xl font-bold text-primary mb-6">Cloud Service Models</h4>
-                  <div className="space-y-4">
-                    {[
-                      { title: "IaaS (Infrastructure)", desc: "Virtual machines, storage, networks. (AWS EC2, Google Compute Engine)", color: "bg-blue-500" },
-                      { title: "PaaS (Platform)", desc: "Execution runtimes, databases, web servers. (Heroku, Azure App Service)", color: "bg-emerald-500" },
-                      { title: "SaaS (Software)", desc: "End-user applications. (Gmail, Salesforce, Microsoft 365)", color: "bg-purple-500" }
-                    ].map((model, mi) => (
-                      <div key={mi} className="flex gap-4">
-                        <div className={`w-1 h-auto ${model.color} rounded-full`} />
-                        <div>
-                          <h5 className="font-bold text-primary text-sm">{model.title}</h5>
-                          <p className="text-xs text-gray-text leading-relaxed">{model.desc}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="bg-primary text-white p-8 rounded-3xl shadow-xl">
-                  <h4 className="text-xl font-bold mb-6 text-secondary">Advanced Concepts</h4>
-                  <div className="grid grid-cols-2 gap-4 text-[10px] sm:text-xs">
-                    <div className="space-y-3">
-                      <p className="font-bold border-b border-white/10 pb-2">NETWORKING</p>
-                      <ul className="space-y-2 opacity-80">
-                        <li>• VXLAN Encapsulation</li>
-                        <li>• Virtual Switches (vSwitch)</li>
-                        <li>• SR-IOV Acceleration</li>
-                        <li>• Load Balancing (L4/L7)</li>
-                      </ul>
-                    </div>
-                    <div className="space-y-3">
-                      <p className="font-bold border-b border-white/10 pb-2">STORAGE</p>
-                      <ul className="space-y-2 opacity-80">
-                        <li>• Thin Provisioning</li>
-                        <li>• vSAN / Storage Pools</li>
-                        <li>• Deduplication / Compression</li>
-                        <li>• Flash / Tiered Caching</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
 
-            <div className="section-fade-in overflow-hidden rounded-3xl border border-slate-200 shadow-xl bg-white max-w-6xl mx-auto mt-12">
-              <div className="bg-[#0f172a] px-8 py-5 flex items-center justify-between">
-                <h4 className="text-white font-bold">Cloud vs. On-Premise Comparison</h4>
-                <div className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Strategic Analysis</div>
+            <div className="bg-neutral-bg p-10 rounded-[2.5rem] border border-slate-100 hover:shadow-2xl transition-all hover:-translate-y-2 group relative overflow-hidden">
+              <div className="absolute -right-4 -top-4 text-secondary opacity-[0.03] group-hover:opacity-10 transition-opacity"><Database size={160} /></div>
+              <h3 className="text-xl font-black text-primary mb-6 flex items-center gap-3">
+                <div className="w-10 h-10 bg-secondary/10 rounded-xl flex items-center justify-center text-secondary font-bold">02</div>
+                Storage Virtualization :
+              </h3>
+              <p className="text-gray-text leading-relaxed font-medium">
+                This is pooling physical storage from multiple devices into one logical unit ).
+              </p>
+              <div className="mt-8 p-5 bg-white rounded-2xl border border-slate-100 shadow-sm transition-all group-hover:border-secondary/30">
+                <p className="text-sm text-primary/80 italic font-bold leading-relaxed">
+                  "For example, combining 3 different hard drives to act as one large drive for easier management and backup."
+                </p>
               </div>
-              <table className="w-full text-sm text-left">
-                <thead className="bg-slate-50 text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-200">
-                  <tr>
-                    <th className="px-8 py-4">Feature / Aspect</th>
-                    <th className="px-8 py-4">On-Premise Infrastructure</th>
-                    <th className="px-8 py-4">Cloud Computing</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 bg-white">
-                  <tr>
-                    <td className="px-8 py-6 font-bold text-[#0f172a] bg-slate-50/20 min-w-[200px]">Cost Model</td>
-                    <td className="px-8 py-6 text-slate-600 leading-relaxed"><strong>CapEx:</strong> Heavy upfront investment in hardware/DC space.</td>
-                    <td className="px-8 py-6 text-slate-600 leading-relaxed"><strong>OpEx:</strong> Zero upfront cost. Monthly usage-based billing.</td>
-                  </tr>
-                  <tr>
-                    <td className="px-8 py-6 font-bold text-[#0f172a] bg-slate-50/20">Elasticity</td>
-                    <td className="px-8 py-6 text-slate-600 leading-relaxed">Scaling takes weeks (Procurement & Installation).</td>
-                    <td className="px-8 py-6 text-slate-600 leading-relaxed">Automated instant scaling based on demand.</td>
-                  </tr>
-                  <tr>
-                    <td className="px-8 py-6 font-bold text-[#0f172a] bg-slate-50/20">Reliability</td>
-                    <td className="px-8 py-6 text-slate-600 leading-relaxed">SLA depends on local staffing and redundancy.</td>
-                    <td className="px-8 py-6 text-slate-600 leading-relaxed">Provider-backed 99.99% multi-region uptime.</td>
-                  </tr>
-                </tbody>
-              </table>
+            </div>
+
+            <div className="bg-neutral-bg p-10 rounded-[2.5rem] border border-slate-100 hover:shadow-2xl transition-all hover:-translate-y-2 group relative overflow-hidden">
+              <div className="absolute -right-4 -top-4 text-secondary opacity-[0.03] group-hover:opacity-10 transition-opacity"><Network size={160} /></div>
+              <h3 className="text-xl font-black text-primary mb-6 flex items-center gap-3">
+                <div className="w-10 h-10 bg-secondary/10 rounded-xl flex items-center justify-center text-secondary font-bold">03</div>
+                Network Virtualization :
+              </h3>
+              <p className="text-gray-text leading-relaxed font-medium">
+                Combining network resources into a software-based service , like creating isolated virtual networks or VLANs without changing the physical cables.
+              </p>
+              <div className="mt-8 h-4 w-1/2 bg-secondary/5 rounded-full" />
             </div>
           </div>
 
-          {/* 3D Technologies Visualization */}
-          <div className="section-fade-in mt-16 bg-[#0f172a] p-8 md:p-12 rounded-[3rem] border border-blue-500/20 shadow-[0_0_50px_rgba(34,211,238,0.1)] overflow-hidden relative">
-            <div className="h-[500px] w-full rounded-2xl overflow-hidden border border-white/5 relative z-10 mb-8">
-              <TechnologiesScene />
+          {/* 3 Modern Technologies */}
+          <div className="mb-32 bg-[#0f172a] rounded-[4rem] p-8 md:p-20 text-white relative overflow-hidden">
+             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-secondary/5 rounded-full blur-[100px]" />
+             
+             <div className="relative z-10 text-center mb-16">
+               <h3 className="text-4xl md:text-5xl font-black mb-6 flex flex-col items-center gap-4">
+                 <span className="text-secondary text-sm font-bold tracking-[0.6em] uppercase italic">Modern Era</span>
+                 3. Building on Foundations
+               </h3>
+               <p className="text-slate-400 text-xl max-w-2xl mx-auto font-medium">Reaching the peak of software-governed infrastructure.</p>
+             </div>
+
+             <div className="grid md:grid-cols-2 gap-12 relative z-10">
+               <div className="space-y-8 bg-white/5 p-10 rounded-[3rem] border border-white/10 hover:border-secondary/30 transition-all group">
+                 <div className="w-16 h-16 bg-secondary text-primary rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-[0_0_30px_rgba(34,211,238,0.4)]"><Cloud size={32} /></div>
+                 <h4 className="text-3xl font-black text-white">Cloud Computing ):</h4>
+                 <p className="text-slate-300 text-xl leading-relaxed font-medium italic">
+                   "The cloud takes those virtualized servers, storage, and networks, and delivers them overت). It uses a Pay-as-you-go model )."
+                 </p>
+                 <div className="pt-6 border-t border-white/10 flex flex-wrap gap-3">
+                   <p className="w-full text-xs text-secondary font-bold uppercase tracking-widest mb-2 italic">Top Examples:</p>
+                   <span className="px-4 py-2 bg-secondary/10 rounded-xl border border-secondary/20 text-secondary text-sm font-black">AWS (Amazon Web Services)</span>
+                   <span className="px-4 py-2 bg-secondary/10 rounded-xl border border-secondary/20 text-secondary text-sm font-black">Microsoft Azure</span>
+                 </div>
+               </div>
+
+               <div className="space-y-8 bg-white/5 p-10 rounded-[3rem] border border-white/10 hover:border-secondary/30 transition-all group">
+                 <div className="w-16 h-16 bg-secondary text-primary rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-[0_0_30px_rgba(34,211,238,0.4)]"><Box size={32} /></div>
+                 <h4 className="text-3xl font-black text-white">Containerization ت):</h4>
+                 <p className="text-slate-300 text-xl leading-relaxed font-medium italic">
+                   "While traditional Virtual Machines are heavy, Containers are a modern, lightweight evolution ن). They package only the application code, making them much faster."
+                 </p>
+                 <div className="pt-6 border-t border-white/10 flex flex-wrap gap-3">
+                   <p className="w-full text-xs text-secondary font-bold uppercase tracking-widest mb-2 italic">Essential Tools:</p>
+                   <span className="px-4 py-2 bg-white/10 rounded-xl border border-white/10 text-slate-300 text-sm font-bold">Docker (Creation)</span>
+                   <span className="px-4 py-2 bg-white/10 rounded-xl border border-white/10 text-slate-300 text-sm font-bold">Kubernetes (Scaling اً))</span>
+                 </div>
+               </div>
+             </div>
+          </div>
+
+          {/* 4 On-Premise vs Cloud - Car Analogy */}
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-16">
+              <h3 className="text-3xl md:text-5xl font-black text-primary mb-4 uppercase tracking-tighter">4. (On-Premise vs. Cloud)</h3>
+              <p className="text-gray-text text-xl font-bold italic">" owning your own car vs. using a ride-sharing app ة) "</p>
             </div>
-            <h3 className="text-2xl md:text-3xl font-normal text-white text-center relative z-10 font-mono tracking-wide">
-              Dynamic resource management & scalability
-            </h3>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-secondary/5 rounded-full blur-[100px] pointer-events-none" />
+
+            <div className="bg-neutral-bg rounded-[3.5rem] p-10 md:p-16 border border-slate-200 shadow-xl">
+               <div className="grid md:grid-cols-2 gap-8">
+                 {[
+                   { 
+                     label: "Cost اة):", 
+                     text: "Owning a car is a CapEx (Capital Expenditure) requiring a big upfront payment ( The Cloud is OpEx (Operational Expenditure), you pay only for the ride",
+                     accent: "bg-blue-500"
+                   },
+                   { 
+                     label: "Scalability ة):", 
+                     text: "If you need more seats locally, you must buy a new car. In the cloud, you instantly request a bigger vehicle ().",
+                     accent: "bg-secondary"
+                   },
+                   { 
+                     label: "Maintenance ():", 
+                     text: "On-premise, your IT team fixes the engine. In the cloud, the provider handles all maintenan.",
+                     accent: "bg-emerald-500"
+                   },
+                   { 
+                     label: "Security):", 
+                     text: "On-premise gives you physical control in your garage. The cloud secures your data with world-class enterprise cybersecurity).",
+                     accent: "bg-red-500"
+                   }
+                 ].map((item, i) => (
+                   <div key={i} className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group">
+                     <div className="flex items-center gap-4 mb-6">
+                       <div className={`w-3 h-3 rounded-full ${item.accent} group-hover:scale-150 transition-transform`} />
+                       <h5 className="text-xl font-black text-primary tracking-tight">{item.label}</h5>
+                     </div>
+                     <p className="text-gray-text text-lg leading-relaxed font-medium italic border-l-4 border-slate-100 pl-6 group-hover:border-secondary transition-colors">
+                       {item.text}
+                     </p>
+                   </div>
+                 ))}
+               </div>
+
+               <div className="mt-16 p-8 bg-primary text-white rounded-[2.5rem] text-center relative overflow-hidden shadow-2xl">
+                 <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/10 rounded-bl-full" />
+                 <p className="text-2xl font-black leading-relaxed italic relative z-10">
+                   "Finally, for an enterprise forming its strategy, what is the difference between On-Premise and the Cloudة؟)"
+                 </p>
+               </div>
+            </div>
           </div>
         </div>
       </section>
@@ -985,18 +923,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* New 3D Case Study Visualization */}
-          <div className="section-fade-in mt-20 bg-neutral-bg p-8 md:p-12 rounded-[3.5rem] border border-slate-200 shadow-sm relative overflow-hidden">
-            <h3 className="text-3xl font-bold text-primary text-center mb-10 relative z-10">
-              Interactive Migration Flow
-            </h3>
-            <div className="h-[600px] w-full rounded-2xl overflow-hidden border border-slate-200 relative z-10 mb-8 bg-white shadow-inner">
-              <CaseStudiesScene />
-            </div>
-            <p className="text-center text-gray-text max-w-2xl mx-auto relative z-10">
-              This visualization demonstrates the flow of migrating application clusters from legacy physical architectures to modern, virtualized cloud environments.
-            </p>
-          </div>
+
         </div>
       </section>
 
