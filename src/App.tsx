@@ -313,72 +313,190 @@ export default function App() {
             <div className="w-20 h-1.5 bg-secondary mx-auto rounded-full" />
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 mb-20">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
             {[
-              { icon: <Cpu />, title: "Server", desc: "Partitioning one physical server into multiple VMs.", ex: "Reduces 15 physical servers to 2." },
-              { icon: <Database />, title: "Storage", desc: "Pooling physical storage from multiple devices into one logical unit.", ex: "Combining 3 hard drives for easier backup." },
-              { icon: <Network />, title: "Network", desc: "Combining network resources into a software-based service.", ex: "Creating isolated virtual networks (VLANs)." }
+              { 
+                icon: <Cpu />, 
+                title: "Server Virtualization", 
+                desc: "The most common form, where a hypervisor partitions physical CPU, RAM, and I/O into multiple isolated Virtual Machines (VMs).", 
+                tech: ["VMware vSphere/ESXi", "Microsoft Hyper-V", "KVM (Kernel-based VM)"],
+                impact: "Maximizes hardware ROI by increasing server utilization from 15% to 80%+" 
+              },
+              { 
+                icon: <Database />, 
+                title: "Storage Virtualization", 
+                desc: "Abstracts physical storage from multiple network-attached devices into a single, software-managed pool of capacity.", 
+                tech: ["SAN (Storage Area Network)", "vSAN (Software-Defined Storage)", "NFS/iSCSI Protocols"],
+                impact: "Enables advanced data management like thin provisioning, snapshots, and deduplication."
+              },
+              { 
+                icon: <Network />, 
+                title: "Network Virtualization (SDN)", 
+                desc: "Decouples network control and forwarding functions, allowing the network to be programmed and managed as a software service.", 
+                tech: ["VXLAN (Virtual Extensible LAN)", "SD-WAN", "Micro-segmentation"],
+                impact: "Increases security through isolation and simplifies complex cross-datacenter routing."
+              },
+              { 
+                icon: <Cloud />, 
+                title: "Cloud Infrastructure", 
+                desc: "A service model that provides on-demand, virtualized computing resources (IaaS, PaaS, SaaS) over the internet with broad network access.", 
+                tech: ["AWS (EC2/S3)", "Microsoft Azure", "Google Cloud Platform (GCP)"],
+                impact: "Shifts CapEx to OpEx and provides infinite elasticity for modern applications."
+              },
+              { 
+                icon: <Box />, 
+                title: "Containerization", 
+                desc: "An operating-system-level virtualization method for deploying and running distributed applications without launching an entire VM.", 
+                tech: ["Docker Engine", "Kubernetes (K8s) Orchestration", "Podman"],
+                impact: "Extremely lightweight and portable; perfect for microservices and DevOps CI/CD pipelines."
+              },
+              { 
+                icon: <Layers />, 
+                title: "Desktop Virtualization (VDI)", 
+                desc: "Hosts desktop operating systems on a centralized server, delivering them as a service to remote end-user devices.", 
+                tech: ["Citrix Virtual Apps", "VMware Horizon", "Amazon WorkSpaces"],
+                impact: "Enhances security by keeping data in the data center and simplifies device management."
+              }
             ].map((item, i) => (
-              <div key={i} className="section-fade-in p-8 rounded-2xl bg-neutral-bg border border-slate-100">
-                <div className="text-secondary mb-4">{item.icon}</div>
-                <h3 className="text-xl font-bold text-primary mb-2">{item.title} Virtualization</h3>
-                <p className="text-gray-text text-sm mb-4">{item.desc}</p>
-                <div className="text-xs font-medium text-primary/60 bg-white p-3 rounded-lg border border-slate-200">
-                  <strong>EXAMPLE:</strong> {item.ex}
+              <div key={i} className="section-fade-in p-8 rounded-2xl bg-neutral-bg border border-slate-100 hover:shadow-lg transition-all hover:border-secondary/30 group">
+                <div className="text-secondary mb-4 group-hover:scale-110 transition-transform">{item.icon}</div>
+                <h3 className="text-xl font-bold text-primary mb-2">{item.title}</h3>
+                <p className="text-gray-text text-sm mb-6 leading-relaxed">{item.desc}</p>
+                <div className="space-y-4">
+                  <div className="bg-white p-3 rounded-lg border border-slate-200">
+                    <p className="text-[10px] font-bold text-secondary uppercase tracking-widest mb-2">Key Technologies</p>
+                    <div className="flex flex-wrap gap-2 text-[11px] text-primary/70 font-medium">
+                      {item.tech.map((t, ti) => (
+                        <span key={ti} className="px-2 py-0.5 bg-secondary/5 border border-secondary/10 rounded-md">{t}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="text-[11px] font-medium text-primary/60 italic leading-snug">
+                    <span className="font-bold text-primary/80 not-italic">IMPACT:</span> {item.impact}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
-
-          <div className="grid md:grid-cols-2 gap-12 items-start mb-20">
-            <div className="section-fade-in space-y-6">
-              <h3 className="text-3xl font-bold text-primary">Modern Evolution</h3>
+            
+          <div className="section-fade-in space-y-12 mb-20 max-w-6xl mx-auto">
+            <h3 className="text-3xl font-bold text-primary text-center">Technical Deep Dive</h3>
+            
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div className="space-y-6">
+                <h4 className="text-2xl font-bold text-primary">VMs vs. Containerization</h4>
+                <p className="text-gray-text leading-relaxed">
+                  While both provide isolation, they operate at different layers. Virtual Machines virtualize the <strong>hardware</strong> (Kernel included), while Containers virtualize the <strong>Operating System</strong> (sharing the host Kernel).
+                </p>
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                  <table className="w-full text-xs">
+                    <thead className="bg-slate-50 border-b border-slate-100">
+                      <tr>
+                        <th className="px-4 py-3 text-left">Feature</th>
+                        <th className="px-4 py-3 text-left">Virtual Machines</th>
+                        <th className="px-4 py-3 text-left">Containers</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      <tr>
+                        <td className="px-4 py-3 font-bold">Size</td>
+                        <td className="px-4 py-3">Gigabytes (GB)</td>
+                        <td className="px-4 py-3">Megabytes (MB)</td>
+                      </tr>
+                      <tr>
+                        <td className="px-4 py-3 font-bold">Boot Time</td>
+                        <td className="px-4 py-3">Minutes/Seconds</td>
+                        <td className="px-4 py-3">Milliseconds</td>
+                      </tr>
+                      <tr>
+                        <td className="px-4 py-3 font-bold">Isolation</td>
+                        <td className="px-4 py-3">Strong (HW Level)</td>
+                        <td className="px-4 py-3">Medium (Process Level)</td>
+                      </tr>
+                      <tr>
+                        <td className="px-4 py-3 font-bold">Efficiency</td>
+                        <td className="px-4 py-3">Higher Overhead</td>
+                        <td className="px-4 py-3">Native Performance</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              
               <div className="space-y-8">
-                <div className="flex gap-4">
-                  <div className="shrink-0 w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center text-secondary">
-                    <Cloud />
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-bold text-primary">Cloud Computing</h4>
-                    <p className="text-gray-text text-sm leading-relaxed">Delivering virtualized resources (EC2, S3) over the internet on a pay-as-you-go basis. Enablers: AWS, Microsoft Azure.</p>
+                <div className="bg-neutral-bg p-8 rounded-3xl border border-slate-100">
+                  <h4 className="text-2xl font-bold text-primary mb-6">Cloud Service Models</h4>
+                  <div className="space-y-4">
+                    {[
+                      { title: "IaaS (Infrastructure)", desc: "Virtual machines, storage, networks. (AWS EC2, Google Compute Engine)", color: "bg-blue-500" },
+                      { title: "PaaS (Platform)", desc: "Execution runtimes, databases, web servers. (Heroku, Azure App Service)", color: "bg-emerald-500" },
+                      { title: "SaaS (Software)", desc: "End-user applications. (Gmail, Salesforce, Microsoft 365)", color: "bg-purple-500" }
+                    ].map((model, mi) => (
+                      <div key={mi} className="flex gap-4">
+                        <div className={`w-1 h-auto ${model.color} rounded-full`} />
+                        <div>
+                          <h5 className="font-bold text-primary text-sm">{model.title}</h5>
+                          <p className="text-xs text-gray-text leading-relaxed">{model.desc}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <div className="flex gap-4">
-                  <div className="shrink-0 w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-                    <Box />
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-bold text-primary">Containerization</h4>
-                    <p className="text-gray-text text-sm leading-relaxed">Lightweight evolution of VMs. Packages app code with dependencies, sharing the host OS kernel. Tools: Docker, Kubernetes.</p>
+
+                <div className="bg-primary text-white p-8 rounded-3xl shadow-xl">
+                  <h4 className="text-xl font-bold mb-6 text-secondary">Advanced Concepts</h4>
+                  <div className="grid grid-cols-2 gap-4 text-[10px] sm:text-xs">
+                    <div className="space-y-3">
+                      <p className="font-bold border-b border-white/10 pb-2">NETWORKING</p>
+                      <ul className="space-y-2 opacity-80">
+                        <li>• VXLAN Encapsulation</li>
+                        <li>• Virtual Switches (vSwitch)</li>
+                        <li>• SR-IOV Acceleration</li>
+                        <li>• Load Balancing (L4/L7)</li>
+                      </ul>
+                    </div>
+                    <div className="space-y-3">
+                      <p className="font-bold border-b border-white/10 pb-2">STORAGE</p>
+                      <ul className="space-y-2 opacity-80">
+                        <li>• Thin Provisioning</li>
+                        <li>• vSAN / Storage Pools</li>
+                        <li>• Deduplication / Compression</li>
+                        <li>• Flash / Tiered Caching</li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-            
-            <div className="section-fade-in overflow-hidden rounded-2xl border border-slate-200 shadow-sm">
+
+            <div className="section-fade-in overflow-hidden rounded-3xl border border-slate-200 shadow-xl bg-white max-w-6xl mx-auto mt-12">
+              <div className="bg-[#0f172a] px-8 py-5 flex items-center justify-between">
+                <h4 className="text-white font-bold">Cloud vs. On-Premise Comparison</h4>
+                <div className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Strategic Analysis</div>
+              </div>
               <table className="w-full text-sm text-left">
-                <thead className="bg-primary text-white text-xs uppercase tracking-wider">
+                <thead className="bg-slate-50 text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-200">
                   <tr>
-                    <th className="px-6 py-4">Aspect</th>
-                    <th className="px-6 py-4">On-Premise</th>
-                    <th className="px-6 py-4">Cloud</th>
+                    <th className="px-8 py-4">Feature / Aspect</th>
+                    <th className="px-8 py-4">On-Premise Infrastructure</th>
+                    <th className="px-8 py-4">Cloud Computing</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200 bg-white">
+                <tbody className="divide-y divide-slate-100 bg-white">
                   <tr>
-                    <td className="px-6 py-4 font-bold text-primary">Cost Model</td>
-                    <td className="px-6 py-4 text-gray-text">CapEx (Upfront)</td>
-                    <td className="px-6 py-4 text-gray-text">OpEx (Pay-as-you-go)</td>
+                    <td className="px-8 py-6 font-bold text-[#0f172a] bg-slate-50/20 min-w-[200px]">Cost Model</td>
+                    <td className="px-8 py-6 text-slate-600 leading-relaxed"><strong>CapEx:</strong> Heavy upfront investment in hardware/DC space.</td>
+                    <td className="px-8 py-6 text-slate-600 leading-relaxed"><strong>OpEx:</strong> Zero upfront cost. Monthly usage-based billing.</td>
                   </tr>
                   <tr>
-                    <td className="px-6 py-4 font-bold text-primary">Scalability</td>
-                    <td className="px-6 py-4 text-gray-text">Limited & Slow</td>
-                    <td className="px-6 py-4 text-gray-text">Highly Elastic</td>
+                    <td className="px-8 py-6 font-bold text-[#0f172a] bg-slate-50/20">Elasticity</td>
+                    <td className="px-8 py-6 text-slate-600 leading-relaxed">Scaling takes weeks (Procurement & Installation).</td>
+                    <td className="px-8 py-6 text-slate-600 leading-relaxed">Automated instant scaling based on demand.</td>
                   </tr>
                   <tr>
-                    <td className="px-6 py-4 font-bold text-primary">Maintenance</td>
-                    <td className="px-6 py-4 text-gray-text">Internal IT Team</td>
-                    <td className="px-6 py-4 text-gray-text">Cloud Provider</td>
+                    <td className="px-8 py-6 font-bold text-[#0f172a] bg-slate-50/20">Reliability</td>
+                    <td className="px-8 py-6 text-slate-600 leading-relaxed">SLA depends on local staffing and redundancy.</td>
+                    <td className="px-8 py-6 text-slate-600 leading-relaxed">Provider-backed 99.99% multi-region uptime.</td>
                   </tr>
                 </tbody>
               </table>
@@ -656,22 +774,51 @@ export default function App() {
                 </p>
               </div>
 
-              <h4 className="text-3xl font-bold text-center text-white mb-10">The 3 Ways to Move</h4>
+              <h4 className="text-3xl font-bold text-center text-white mb-10">Migration Strategies: The 6 R's</h4>
               <div className="grid lg:grid-cols-3 gap-8 mb-24">
                 {[
-                  { method: "Lift and shift", exp: "Take the server as-is and move it to the cloud. Fastest method.", ex: "Windows email server → copied to Azure with no changes" },
-                  { method: "Re-platform", exp: "Make small changes to use managed cloud services.", ex: "Replace your own database with a managed service like AWS RDS" },
-                  { method: "Re-architect", exp: "Rebuild the application to fully benefit from the cloud. Takes longer but delivers better results.", ex: "A large application → broken into small containers that scale automatically" }
+                  { 
+                    method: "Rehosting", 
+                    alias: "Lift & Shift",
+                    exp: "Copying applications directly to the cloud without any changes to the code or architecture.", 
+                    tech: ["AWS SMS", "Azure Site Recovery", "VM Import/Export"],
+                    effort: "Low Effort",
+                    speed: "Fastest"
+                  },
+                  { 
+                    method: "Replatforming", 
+                    alias: "Lift & Reshape",
+                    exp: "Making minor adjustments to take advantage of cloud-managed services (like switching from self-managed DB to managed RDS).", 
+                    tech: ["DB Migration Services", "Managed Runtimes", "Container Sidecars"],
+                    effort: "Medium Effort",
+                    speed: "Moderate"
+                  },
+                  { 
+                    method: "Refactoring", 
+                    alias: "Re-architecting",
+                    exp: "Full redesign to cloud-native microservices. Uses serverless, K8s, and event-driven architectures.", 
+                    tech: ["AWS Lambda", "Kubernetes", "Microservices"],
+                    effort: "High Effort",
+                    speed: "Slow"
+                  }
                 ].map((item, i) => (
                   <div key={i} className="bg-white/5 rounded-[2.5rem] border border-white/5 overflow-hidden flex flex-col h-full group hover:border-secondary/50 transition-all shadow-xl hover:shadow-[0_0_30px_rgba(34,211,238,0.1)] hover:-translate-y-2">
                     <div className="bg-black/30 p-8 border-b border-white/5">
-                      <div className="text-secondary font-bold text-3xl">{item.method}</div>
+                      <div className="text-secondary font-bold text-3xl mb-1">{item.method}</div>
+                      <div className="text-slate-500 text-sm font-mono uppercase tracking-widest">{item.alias}</div>
                     </div>
                     <div className="p-8 flex-grow flex flex-col justify-between">
-                      <p className="text-slate-300 text-xl leading-relaxed mb-8">{item.exp}</p>
-                      <div className="bg-white/5 p-6 rounded-2xl border border-white/5 text-lg">
-                        <span className="text-white font-bold block mb-3 uppercase tracking-wider text-sm opacity-50">Example:</span>
-                        <span className="text-secondary italic">{item.ex}</span>
+                      <div className="space-y-6">
+                        <p className="text-slate-300 text-lg leading-relaxed">{item.exp}</p>
+                        <div className="flex flex-wrap gap-2">
+                          {item.tech.map((t, ti) => (
+                            <span key={ti} className="text-[10px] px-2 py-1 bg-white/5 rounded-md border border-white/10 text-slate-400">{t}</span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="mt-8 flex items-center justify-between border-t border-white/5 pt-6 text-[11px] font-bold uppercase tracking-wider">
+                        <span className="text-slate-500">Effort: <span className="text-secondary">{item.effort}</span></span>
+                        <span className="text-slate-500">Speed: <span className="text-secondary">{item.speed}</span></span>
                       </div>
                     </div>
                   </div>
@@ -700,25 +847,15 @@ export default function App() {
                       </div>
                     </div>
                   ))}
-              </div>
-              
-              {/* 3D Dynamic Migration Visualization */}
-              <div className="section-fade-in mt-20 bg-black p-8 md:p-12 rounded-[3rem] border border-secondary/20 shadow-[0_0_50px_rgba(34,211,238,0.1)] overflow-hidden relative">
-                <div className="h-[500px] w-full rounded-2xl overflow-hidden border border-white/5 relative z-10 mb-8">
-                  <DynamicMigrationScene />
                 </div>
-                <h3 className="text-2xl md:text-3xl font-normal text-white text-center relative z-10 font-mono tracking-wide">
-                  Assess • Migrate • Optimize
-                </h3>
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-secondary/5 rounded-full blur-[100px] pointer-events-none" />
               </div>
             </div>
-          </div>
+
             <div className="w-24 h-1 bg-white/10 mx-auto my-24 rounded-full" />
 
             {/* Step 3 */}
-            <div className="section-fade-in">
-              <div className="flex flex-col md:flex-row items-center gap-6 mb-12 justify-center">
+              <div className="section-fade-in">
+                <div className="flex flex-col md:flex-row items-center gap-6 mb-12 justify-center">
                 <div className="w-20 h-20 rounded-3xl bg-secondary flex items-center justify-center text-primary font-black text-4xl shadow-[0_0_40px_rgba(34,211,238,0.3)]">3</div>
                 <div className="text-center md:text-left">
                   <h3 className="text-5xl font-bold text-white mb-2">Optimization</h3>
@@ -746,6 +883,31 @@ export default function App() {
                     <p className="text-slate-400 leading-relaxed text-lg">{item.desc}</p>
                   </div>
                 ))}
+              </div>
+
+              <div className="section-fade-in mt-16 overflow-hidden rounded-3xl border border-white/10 shadow-2xl max-w-5xl mx-auto bg-black/20">
+                <table className="w-full text-left border-collapse">
+                  <thead className="bg-[#111827] text-secondary text-sm uppercase tracking-widest border-b border-white/10">
+                    <tr>
+                      <th className="px-8 py-5 font-bold">Action</th>
+                      <th className="px-8 py-5 font-bold">Simple Explanation</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {[
+                      { action: "Right-sizing", exp: "Many servers are oversized \"just in case.\" Reduce them if needed." },
+                      { action: "Auto-scaling", exp: "The system grows when many people use it. It shrinks when few people use it. You pay only for what you need." },
+                      { action: "Delete unused resources", exp: "Forgotten test servers still cost money. Find and delete them." },
+                      { action: "Reserved instances", exp: "If you know you will use a server for a long time, you can promise to keep it. The cloud provider gives you a lower price." },
+                      { action: "Monitor and alert", exp: "Make a dashboard to watch your spending. Get a warning if you spend too much." }
+                    ].map((row, i) => (
+                      <tr key={i} className="hover:bg-white/5 transition-colors">
+                        <td className="px-8 py-6 font-bold text-white text-lg">{row.action}</td>
+                        <td className="px-8 py-6 text-slate-300 text-lg leading-relaxed">{row.exp}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
            
@@ -792,37 +954,48 @@ export default function App() {
                 </div>
               </div>
             </div>
-
             <div className="section-fade-in bg-primary p-10 rounded-3xl text-white shadow-2xl">
               <div className="flex items-center gap-4 mb-8">
                 <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center p-3">
                   <Cloud className="text-primary w-full h-full" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold">AWS</h3>
-                  <p className="text-sm text-slate-400">Cloud Provider Giant</p>
+                  <h3 className="text-2xl font-bold">Amazon Web Services (AWS)</h3>
+                  <p className="text-sm text-slate-400">Pioneer of Public Cloud</p>
                 </div>
               </div>
               <div className="space-y-6">
                 <p className="text-slate-300 text-sm leading-relaxed">
-                  AWS provides virtual resources (EC2, Storage, Networks) instead of physical hardware. Companies rent these resources online.
+                  By virtualizing their massive excess capacity, AWS transformed internal operations into the world's leading cloud platform, hosting millions of virtualized workloads globally.
                 </p>
-                <div className="space-y-4">
-                  <h4 className="font-bold text-secondary">Key Benefits:</h4>
+                <div className="grid grid-cols-2 gap-4">
                   {[
-                    "Fast deployment of applications",
-                    "Flexible infrastructure",
-                    "Pay-as-you-go model",
-                    "Global scalability"
-                  ].map((benefit, bi) => (
-                    <div key={bi} className="flex items-center gap-3 text-sm">
-                      <CheckCircle2 className="text-secondary w-4 h-4" />
-                      {benefit}
+                    { label: "Availability Zones", value: "30+" },
+                    { label: "Active Customers", value: "1M+" },
+                    { label: "EC2 Instances", value: "700+" },
+                    { label: "Global Regions", value: "100+" }
+                  ].map((stat, si) => (
+                    <div key={si} className="bg-white/5 p-3 rounded-xl border border-white/10 text-center">
+                      <p className="text-secondary font-bold text-sm tracking-tight">{stat.value}</p>
+                      <p className="text-[10px] text-slate-400 uppercase tracking-wider">{stat.label}</p>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* New 3D Case Study Visualization */}
+          <div className="section-fade-in mt-20 bg-neutral-bg p-8 md:p-12 rounded-[3.5rem] border border-slate-200 shadow-sm relative overflow-hidden">
+            <h3 className="text-3xl font-bold text-primary text-center mb-10 relative z-10">
+              Interactive Migration Flow
+            </h3>
+            <div className="h-[600px] w-full rounded-2xl overflow-hidden border border-slate-200 relative z-10 mb-8 bg-white shadow-inner">
+              <CaseStudiesScene />
+            </div>
+            <p className="text-center text-gray-text max-w-2xl mx-auto relative z-10">
+              This visualization demonstrates the flow of migrating application clusters from legacy physical architectures to modern, virtualized cloud environments.
+            </p>
           </div>
         </div>
       </section>
@@ -861,29 +1034,15 @@ export default function App() {
             </p>
           </div>
 
-          <div className="mt-20 bg-[#010515] p-8 md:p-12 rounded-[3rem] border border-[#0088ff]/20 shadow-[0_0_50px_rgba(0,136,255,0.1)] overflow-hidden relative">
-            <div className="h-[500px] w-full rounded-2xl overflow-hidden border border-white/5 relative z-10 mb-8">
-              <FutureTrendsScene />
-            </div>
-
-            <h3 className="text-2xl md:text-3xl font-normal text-white text-center relative z-10 font-mono tracking-wide">
-              Future = distributed, intelligent, automated
-            </h3>
-            
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#0088ff]/5 rounded-full blur-[100px] pointer-events-none" />
-          </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-primary py-12 border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="text-slate-400 text-sm mb-8">
-            University Presentation: Virtualization Strategy for Enabling Digital Transformation
+      <footer className="py-10 bg-[#070b14] border-t border-white/5">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col items-center gap-4">
+          <div className="w-8 h-1 bg-secondary/20 rounded-full" />
+          <p className="text-slate-600 text-[10px] uppercase font-bold tracking-[0.25em]">
+            Virtualization Strategy Presentation
           </p>
-          <div className="text-xs text-slate-500">
-            &copy; {new Date().getFullYear()} Virtualization Strategy Project. All rights reserved.
-          </div>
         </div>
       </footer>
     </div>
